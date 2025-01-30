@@ -126,10 +126,3 @@ After training the models, we compare their performance using the following metr
 These metrics help in determining the model that provides the most accurate demand forecasts.
 
 ---
-
-### Key Adjustments:
-- Removed deep learning methods like LSTM as they were not part of your project.
-- Focused on classical time series models such as ARIMA and Exponential Smoothing.
-- Streamlined the README to reflect the core goals and methodology of your project.
-
-Let me know if you'd like any further changes!
