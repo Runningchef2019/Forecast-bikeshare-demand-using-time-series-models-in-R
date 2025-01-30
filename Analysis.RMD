@@ -110,7 +110,7 @@ plot_ly(data = day_data, x = ~dteday, y = ~rr, type = 'scatter', mode = 'lines',
 # Task Three: Smooth time series data
 
 ```{r}
-# Ensure that the columns are numeric before applying tsclean
+
 # This step ensures the data is in the correct format before smoothing
 day_data[["temp"]] <- as.numeric(day_data[["temp"]])
 day_data[["ncnt"]] <- as.numeric(day_data[["ncnt"]])
@@ -137,7 +137,7 @@ day_data %>%
          yaxis = list(title = "Normalized Temperature"))
 
 # Plot normalized bike rentals ('ncnt') over time with smoothing applied
-# The 'season' column is used to color the lines for different seasons
+
 day_data %>%
   plot_ly(x = ~dteday, y = ~ncnt, type = 'scatter', mode = 'lines',
           color = ~factor(season)) %>%
@@ -146,7 +146,7 @@ day_data %>%
          yaxis = list(title = "Normalized Bike Rentals"))
 
 # Plot normalized registered rentals ('nr') over time with smoothing
-# The 'season' column is used to color the lines for different seasons
+
 day_data %>%
   plot_ly(x = ~dteday, y = ~nr, type = 'scatter', mode = 'lines',
           color = ~factor(season)) %>%
@@ -155,7 +155,7 @@ day_data %>%
          yaxis = list(title = "Normalized Registered Rentals"))
 
 # Plot the ratio of rentals to registration ('rr') over time with smoothing
-# The 'season' column is used to color the lines for different seasons
+
 day_data %>%
   plot_ly(x = ~dteday, y = ~rr, type = 'scatter', mode = 'lines',
           color = ~factor(season)) %>%
@@ -170,7 +170,7 @@ day_data %>%
 # Task Four: Decompose and assess the stationarity of time series data
 
 ```{r}
-# Ensure the columns are numeric
+
 day_data[["temp"]] <- as.numeric(day_data[["temp"]])
 day_data[["ncnt"]] <- as.numeric(day_data[["ncnt"]])
 day_data[["nr"]] <- as.numeric(day_data[["nr"]])
@@ -196,7 +196,7 @@ rr_ts <- ts(day_data[["rr"]], frequency = 365)  # Convert 'rr' to time series
 adf_test_rr <- adf.test(rr_ts)  # Perform ADF test for 'rr'
 print(adf_test_rr)
 
-# Ensure 'nr' is extracted as a numeric vector and not a list
+
 norm_rentals <- ts(as.numeric(unlist(day_data[,"nr"])), frequency = 365)
 
 # Perform STL decomposition
@@ -210,7 +210,7 @@ plot(decomped1$time.series[,2],
 # Check residuals (the third component of the decomposition)
 checkresiduals(decomped1$time.series[, 3])
 
-# Ensure 'ncnt' is extracted as a numeric vector and not a list
+
 norm_cnt <- ts(as.numeric(unlist(day_data[,"ncnt"])), frequency = 365)
 
 # Perform STL decomposition
@@ -224,7 +224,7 @@ plot(decomped2$time.series[,2],
 # Check residuals (the third component of the decomposition)
 checkresiduals(decomped2$time.series[, 3])
 
-# Ensure 'rr' is extracted as a numeric vector and not a list
+
 norm_rr <- ts(as.numeric(unlist(day_data[,"rr"])), frequency = 365)
 
 # Perform STL decomposition
@@ -256,7 +256,6 @@ shapiro.test(decomped3$time.series[, 3])
 ```
 
 
-
 # Task Five: Fit and forecast time series data using ARIMA models
 
 ```{r}
@@ -285,7 +284,7 @@ hist(fit2$residuals, xlab = "Residual", ylab = "Distribution", main = "Histogram
 
 shapiro.test(fit2$residuals)
 
-# Generate forecast for the normalized rentals for the next 25 periods
+# Generate forecast for the normalized rentals for the next 30 periods
 prediction2 <- forecast(fit2, 30)
 
 # Plot the forecasted predictions with confidence intervals
@@ -299,7 +298,7 @@ hist(fit2$residuals, xlab = "Residual", ylab = "Distribution", main = "Histogram
 
 shapiro.test(fit2$residuals)
 
-# Generate forecast for the next 25 periods
+# Generate forecast for the next 30 periods
 prediction3 <- forecast(fit2, 30)
 
 # Plot the forecasted values
@@ -318,7 +317,7 @@ plot(prediction3, xlab = "Date", ylab = "Normalized Rental Ratio", main = "Predi
 
 # Data Processing and ARIMA Modeling:
 # The raw data was processed, and ARIMA (AutoRegressive Integrated Moving Average) models were used to forecast bike rental patterns.
-# The model was applied to predict rentals for the next 25 days beyond the available data.
+# The model was applied to predict rentals for the next 30 days beyond the available data.
 
 # Seasonality and Weather Impact:
 # The data indicates a seasonal trend where the number of bike rentals increases as the weather gets warmer, which aligns with typical real-world behavior (e.g., more people use bikes in warm weather).
