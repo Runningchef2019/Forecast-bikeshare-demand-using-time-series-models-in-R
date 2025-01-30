@@ -10,7 +10,6 @@ This project aims to forecast the daily demand for bike rentals using **time ser
 - [Data](#data)
 - [Models Used](#models-used)
 - [Results](#results)
-- [License](#license)
 
 ## Project Overview
 
