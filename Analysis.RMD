@@ -1,0 +1,336 @@
+---
+title: "Forecast daily bike rental demand using time series models"
+author: "Divy Jindal!"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+# About Data Analysis Report
+
+This RMarkdown file contains the report of the data analysis done for the project on forecasting daily bike rental demand using time series models in R. It contains analysis such as data exploration, summary statistics and building the time series models. The final report was completed on `r date()`. 
+
+**Data Description:**
+
+This dataset contains the daily count of rental bike transactions between years 2011 and 2012 in Capital bikeshare system with the corresponding weather and seasonal information.
+
+**Data Source:** https://archive.ics.uci.edu/ml/datasets/bike+sharing+dataset
+
+**Relevant Paper:** 
+
+Fanaee-T, Hadi, and Gama, Joao. Event labeling combining ensemble detectors and background knowledge, Progress in Artificial Intelligence (2013): pp. 1-15, Springer Berlin Heidelberg
+
+
+
+# Task One: Load and explore the data
+
+## Load data and install packages
+
+```{r}
+## Import required packages
+library("tidyverse")
+library("ggplot2")
+library("dbplyr")
+library("timetk")
+library("tseries")
+library("forecast")
+library('plotly')
+data("bike_sharing_daily")
+day_data <- bike_sharing_daily
+```
+
+
+## Describe and explore the data
+
+```{r}
+str(day_data)
+day_data[,"ncnt"] <- day_data[,"cnt"] / max(day_data[,"cnt"])
+day_data[,"nr"] <- day_data[,"registered"] / max(day_data[,"registered"])
+day_data[,"rr"] <- day_data[,"cnt"] / max(day_data[,"registered"])
+summary(day_data)
+
+```
+
+
+
+# Task Two: Create interactive time series plots
+
+```{r}
+## Read about the timetk package
+# ?timetk
+
+library(plotly)
+suppressPackageStartupMessages(library(data.table))
+suppressPackageStartupMessages(library(htmlwidgets))
+
+plot_ly(data = day_data, x = ~dteday, y = ~temp, type = 'scatter', mode = 'lines',
+        color = ~factor(season)) %>%
+  layout(title = "Normalized Temperature vs Date",
+         xaxis = list(title = "Date"),
+         yaxis = list(title = "Normalized Temperature"))
+
+plot_ly(data = day_data, x = ~dteday, y = ~hum, type = 'scatter', mode = 'lines',
+        color = ~factor(season)) %>%
+  layout(title = "Normalized Humidity vs Date",
+         xaxis = list(title = "Date"),
+         yaxis = list(title = "Normalized Humidity"))
+
+plot_ly(data = day_data, x = ~dteday, y = ~windspeed, type = 'scatter', mode = 'lines',
+        color = ~factor(season)) %>%
+  layout(title = "Windspeed vs Date for Day Data",
+         xaxis = list(title = "Date"),
+         yaxis = list(title = "Normalized Windspeed"))
+
+plot_ly(data = day_data, x = ~dteday, y = ~ncnt, type = 'scatter', mode = 'lines',
+        color = ~factor(season)) %>%
+  layout(title = "Normalized Bike Rentals vs Date for Day Data",
+         xaxis = list(title = "Date"),
+         yaxis = list(title = "Normalized Bike Rentals"))
+
+plot_ly(data = day_data, x = ~dteday, y = ~nr, type = 'scatter', mode = 'lines',
+        color = ~factor(season)) %>%
+  layout(title = "Normalized Registered Rentals vs Date for Day Data",
+         xaxis = list(title = "Date"),
+         yaxis = list(title = "Normalized Registered Rentals"))
+
+plot_ly(data = day_data, x = ~dteday, y = ~rr, type = 'scatter', mode = 'lines',
+        color = ~factor(season)) %>%
+  layout(title = "Ratio of Rentals to Registration vs Date for Day Data",
+         xaxis = list(title = "Date"),
+         yaxis = list(title = "Ratio"))
+
+```
+
+
+
+
+# Task Three: Smooth time series data
+
+```{r}
+# Ensure that the columns are numeric before applying tsclean
+# This step ensures the data is in the correct format before smoothing
+day_data[["temp"]] <- as.numeric(day_data[["temp"]])
+day_data[["ncnt"]] <- as.numeric(day_data[["ncnt"]])
+day_data[["nr"]] <- as.numeric(day_data[["nr"]])
+day_data[["rr"]] <- as.numeric(day_data[["rr"]])
+
+# Apply tsclean to smooth the time series data
+# tsclean is used to clean and smooth the time series data by removing outliers
+day_data[["temp"]] <- tsclean(day_data[["temp"]])
+day_data[["ncnt"]] <- tsclean(day_data[["ncnt"]])
+day_data[["nr"]] <- tsclean(day_data[["nr"]])
+day_data[["rr"]] <- tsclean(day_data[["rr"]])
+
+# View the cleaned data (optional)
+# head(day_data)
+
+# Plot the normalized temperature over time, using the 'season' as a color variable
+# The 'dteday' column will be used as the x-axis and 'temp' as the y-axis
+day_data %>%
+  plot_ly(x = ~dteday, y = ~temp, type = 'scatter', mode = 'lines',
+          color = ~factor(season)) %>%
+  layout(title = "Normalized Temperature vs Date for Day Data",
+         xaxis = list(title = "Date"),
+         yaxis = list(title = "Normalized Temperature"))
+
+# Plot normalized bike rentals ('ncnt') over time with smoothing applied
+# The 'season' column is used to color the lines for different seasons
+day_data %>%
+  plot_ly(x = ~dteday, y = ~ncnt, type = 'scatter', mode = 'lines',
+          color = ~factor(season)) %>%
+  layout(title = "Normalized Bike Rentals vs Date for Day Data (Smoothed)",
+         xaxis = list(title = "Date"),
+         yaxis = list(title = "Normalized Bike Rentals"))
+
+# Plot normalized registered rentals ('nr') over time with smoothing
+# The 'season' column is used to color the lines for different seasons
+day_data %>%
+  plot_ly(x = ~dteday, y = ~nr, type = 'scatter', mode = 'lines',
+          color = ~factor(season)) %>%
+  layout(title = "Normalized Registered Rentals vs Date for Day Data (Smoothed)",
+         xaxis = list(title = "Date"),
+         yaxis = list(title = "Normalized Registered Rentals"))
+
+# Plot the ratio of rentals to registration ('rr') over time with smoothing
+# The 'season' column is used to color the lines for different seasons
+day_data %>%
+  plot_ly(x = ~dteday, y = ~rr, type = 'scatter', mode = 'lines',
+          color = ~factor(season)) %>%
+  layout(title = "Ratio of Rentals to Registration vs Date for Day Data (Smoothed)",
+         xaxis = list(title = "Date"),
+         yaxis = list(title = "Ratio"))
+
+```
+
+
+
+# Task Four: Decompose and assess the stationarity of time series data
+
+```{r}
+# Ensure the columns are numeric
+day_data[["temp"]] <- as.numeric(day_data[["temp"]])
+day_data[["ncnt"]] <- as.numeric(day_data[["ncnt"]])
+day_data[["nr"]] <- as.numeric(day_data[["nr"]])
+day_data[["rr"]] <- as.numeric(day_data[["rr"]])
+
+# Augmented Dickey-Fuller Test for 'temp'
+temp_ts <- ts(day_data[["temp"]], frequency = 365)  # Convert 'temp' to time series
+adf_test_temp <- adf.test(temp_ts)  # Perform ADF test for 'temp'
+print(adf_test_temp)
+
+# Augmented Dickey-Fuller Test for 'ncnt'
+ncnt_ts <- ts(day_data[["ncnt"]], frequency = 365)  # Convert 'ncnt' to time series
+adf_test_ncnt <- adf.test(ncnt_ts)  # Perform ADF test for 'ncnt'
+print(adf_test_ncnt)
+
+# Augmented Dickey-Fuller Test for 'nr'
+nr_ts <- ts(day_data[["nr"]], frequency = 365)  # Convert 'nr' to time series
+adf_test_nr <- adf.test(nr_ts)  # Perform ADF test for 'nr'
+print(adf_test_nr)
+
+# Augmented Dickey-Fuller Test for 'rr'
+rr_ts <- ts(day_data[["rr"]], frequency = 365)  # Convert 'rr' to time series
+adf_test_rr <- adf.test(rr_ts)  # Perform ADF test for 'rr'
+print(adf_test_rr)
+
+# Ensure 'nr' is extracted as a numeric vector and not a list
+norm_rentals <- ts(as.numeric(unlist(day_data[,"nr"])), frequency = 365)
+
+# Perform STL decomposition
+decomped1 <- stl(norm_rentals, "periodic")
+
+# Plot the stationary component (residuals) of the decomposition
+plot(decomped1$time.series[,2], 
+     ylab = "Stationary of the Normalized Rental Reservations", 
+     xlab = "Day of the Year")
+
+# Check residuals (the third component of the decomposition)
+checkresiduals(decomped1$time.series[, 3])
+
+# Ensure 'ncnt' is extracted as a numeric vector and not a list
+norm_cnt <- ts(as.numeric(unlist(day_data[,"ncnt"])), frequency = 365)
+
+# Perform STL decomposition
+decomped2 <- stl(norm_cnt, s.window = "periodic")
+
+# Plot the stationary component (residuals) of the decomposition
+plot(decomped2$time.series[,2], 
+     ylab = "Stationary of the Normalized Rental Counts", 
+     xlab = "Day of the Year")
+
+# Check residuals (the third component of the decomposition)
+checkresiduals(decomped2$time.series[, 3])
+
+# Ensure 'rr' is extracted as a numeric vector and not a list
+norm_rr <- ts(as.numeric(unlist(day_data[,"rr"])), frequency = 365)
+
+# Perform STL decomposition
+decomped3 <- stl(norm_rr, s.window = "periodic")
+
+# Plot the stationary component (residuals) of the decomposition
+plot(decomped3$time.series[,2], 
+     ylab = "Stationary of the Normalized Rental Counts to Reservations", 
+     xlab = "Day of the Year")
+
+# Check residuals (the third component of the decomposition)
+checkresiduals(decomped3$time.series[, 3])
+
+# Checking for Normality of Residuals using Shapiro-Wilk Test
+
+# For Normalized Rental Reservations (decomped1)
+print("-------Normalized Rental Reservations")
+shapiro.test(decomped1$time.series[, 3])
+
+# For Normalized Count of Rentals (decomped2)
+print("-------Normalized Count of Rentals")
+shapiro.test(decomped2$time.series[, 3])
+
+# For Normalized Ratio of Rentals to Reservations (decomped3)
+print("-------Normalized Ratio of Rentals to Reservations")
+shapiro.test(decomped3$time.series[, 3])
+
+
+```
+
+
+
+# Task Five: Fit and forecast time series data using ARIMA models
+
+```{r}
+# Fit ARIMA model to normalized bike count data
+fit1 <- auto.arima(norm_cnt, seasonal = TRUE)
+
+# Plot the histogram of residuals from the ARIMA model
+hist(fit1$residuals, 
+     xlab = "Residual", 
+     ylab = "Distribution", 
+     main = "Histogram of Model Errors - Bike Count")
+
+shapiro.test(fit1$residuals)
+
+# Forecast the next 25 days using the ARIMA model
+prediction1 <- forecast(fit1, 30)
+
+# Plot the forecasted bike rental counts
+plot(prediction1, xlab = "Date", ylab = "Normalized Count of Rentals", main = "Prediction of Bike Rental Counts")
+
+# Fit the ARIMA model for the normalized rentals
+fit2 <- auto.arima(norm_rentals, seasonal = TRUE)
+
+# Plot the histogram of residuals to analyze model errors
+hist(fit2$residuals, xlab = "Residual", ylab = "Distribution", main = "Histogram of Model Errors - Rental Count")
+
+shapiro.test(fit2$residuals)
+
+# Generate forecast for the normalized rentals for the next 25 periods
+prediction2 <- forecast(fit2, 30)
+
+# Plot the forecasted predictions with confidence intervals
+plot(prediction2, xlab = "Date", ylab = "Normalized Rentals", main = "Prediction of Bike Rentals")
+
+# Fit ARIMA model to the normalized bike rental counts
+fit2 <- auto.arima(norm_cnt, seasonal = TRUE)
+
+# Plot histogram of residuals (errors) from the model
+hist(fit2$residuals, xlab = "Residual", ylab = "Distribution", main = "Histogram of Model Errors - Count to Rental Ratio")
+
+shapiro.test(fit2$residuals)
+
+# Generate forecast for the next 25 periods
+prediction3 <- forecast(fit2, 30)
+
+# Plot the forecasted values
+plot(prediction3, xlab = "Date", ylab = "Normalized Rental Ratio", main = "Prediction of Bike Rentals to Reservations")
+
+
+
+```
+
+
+
+# Task Six: Findings and Conclusions
+
+# The findings and conclusions part summarizes the key insights drawn from the analysis and modeling performed on the bike rental data. 
+# Here’s a breakdown of what the conclusion is stating:
+
+# Data Processing and ARIMA Modeling:
+# The raw data was processed, and ARIMA (AutoRegressive Integrated Moving Average) models were used to forecast bike rental patterns.
+# The model was applied to predict rentals for the next 25 days beyond the available data.
+
+# Seasonality and Weather Impact:
+# The data indicates a seasonal trend where the number of bike rentals increases as the weather gets warmer, which aligns with typical real-world behavior (e.g., more people use bikes in warm weather).
+
+# Annual Trend:
+# Over a two-year period, the data shows that the total number of rentals increases year-over-year. This suggests a growing trend in bike rentals, possibly due to factors like improved infrastructure, greater bike-sharing adoption, or increased demand.
+
+# End-of-Cycle Behavior:
+# The data terminates at the end of a one-year cycle, and based on the previous trends, the model predicts that rentals will continue to increase as compared to the previous year.
+
+# Oscillation and Long-Term Growth:
+# The rentals oscillate (up and down) within a year but with an overall upward trend. The pattern shows that although rentals fluctuate seasonally, the overall trend indicates increasing demand for bike rentals.
+
+# Model Expectations:
+# The conclusions match the expected outcome: the data oscillates seasonally, but with an overall upward trajectory in bike rentals.
