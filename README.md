@@ -1,7 +1,3 @@
-You're right to ask for clarification! Based on your earlier description, your project is more focused on **predicting bike rental demand using time series forecasting models**, rather than incorporating advanced deep learning models like LSTM. I made an assumption in my initial readme draft. Here's an updated and more accurate README based on your project description:
-
----
-
 # Forecast Daily Bike Rental Demand
 
 This project aims to forecast the daily demand for bike rentals using **time series forecasting** techniques. The dataset contains daily bike rental demand along with other influencing features like weather and time of year. The goal is to use this data to predict the future rental demand for better resource planning.
