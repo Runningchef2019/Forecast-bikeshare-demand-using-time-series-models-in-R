@@ -26,7 +26,7 @@ To run this project locally, follow these steps:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/bike-rental-demand-forecasting.git
+   git clone https://github.com/Runningchef2019/bike-rental-demand-forecasting.git
    ```
 
 2. Navigate into the project folder:
